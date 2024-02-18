@@ -1,0 +1,23 @@
+# No alertmanager for this demo
+alertmanager:
+  enabled: false
+
+# This configuration means all ServiceMonitors in the namespsace will be picked up
+# Use with caution!
+prometheus:
+  prometheusSpec:
+    # Ignore empty/null serviceMonitorSelector, do not use default values
+    serviceMonitorSelectorNilUsesHelmValues: false
+    # select all service monitors
+    serviceMonitorSelector: {}
+    # in all namespaces
+    serviceMonitorNamespaceSelector: {}
+    ruleSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+
+grafana:
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
