@@ -7,17 +7,17 @@ alertmanager:
 prometheus:
   prometheusSpec:
     # See https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/templates/prometheus/prometheus.yaml
-    # Ignore empty/null serviceMonitorSelector, do not use default values
     serviceMonitorSelectorNilUsesHelmValues: false
-    # select all service monitors
     serviceMonitorSelector: {}
-    # in all namespaces
     serviceMonitorNamespaceSelector: {}
-    ruleSelectorNilUsesHelmValues: false
-    podMonitorSelectorNilUsesHelmValues: false # TODO: check
-#    podMonitorNamespaceSelector: {}
-#    podMonitorSelector: {}
-    probeSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+#    serviceMonitorSelector:
+#      matchLabels:
+#        team: operations
+#    ruleSelectorNilUsesHelmValues: false
+##    podMonitorNamespaceSelector: {}
+##    podMonitorSelector: {}
+#    probeSelectorNilUsesHelmValues: false
 
 grafana:
   sidecar:

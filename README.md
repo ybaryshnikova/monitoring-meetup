@@ -129,6 +129,9 @@ kube-state-metrics
 
 ## Troubleshooting
 `curl 'http://localhost:9090/api/v1/series?match[]=demo_app_button_clicks_total' | jq`
+Check Status -> Targets
+check helm values (serviceMonitorSelectorNilUsesHelmValues)
+check service monitor configuration
 
 grafana config
 `helm upgrade prometheus-operator prometheus-community/kube-prometheus-stack -f helm-values/kps-values.yml \
@@ -146,7 +149,7 @@ variable
 ## Useful links:
 [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)
 [kube-prometheus-stack values](https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml)
-[PromQL basics]https://prometheus.io/docs/prometheus/latest/querying/basics/
+[PromQL basics](https://prometheus.io/docs/prometheus/latest/querying/basics/)
 Exporters:
 [Flask Prometheus Exporter](https://pypi.org/project/prometheus-flask-exporter/)
 [Spring Boot Prometheus](https://medium.com/simform-engineering/revolutionize-monitoring-empowering-spring-boot-applications-with-prometheus-and-grafana-e99c5c7248cf)
