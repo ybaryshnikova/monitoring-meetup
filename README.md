@@ -6,7 +6,7 @@ Minikube comes with a built-in kubectl installation.
 Install [Helm](https://helm.sh/docs/intro/install/) - a "package manager" for Kubernetes to install and manage Kubernetes extensions.
 Helm uses a packaging format called charts. 
 A chart is a collection of files that describe a related set of Kubernetes resources.
-### Bootstrap a cluster
+## Bootstrap a cluster
 `minikube start -p monitoring-meetup`
 Switch to a profile:
 `minikube profile monitoring-meetup`
@@ -23,22 +23,31 @@ Resource is an object managed by Kubernetes (pod, namespace, deployment, service
 Custom resources are objects that are not part of the Kubernetes core API, but are instead defined by the user.
 
 Add repository to install kube-prometheus-stack chart from
-`helm repo add prometheus-community https://prometheus-community.github.io/helm-charts`
-`helm search repo prometheus-community`
+```commandline
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm search repo prometheus-community
+```
 
 Create a namespace for monitoring
-`kubectl create namespace monitoring`
+```commandline
+kubectl create namespace monitoring
+```
 Install the kps chart
-`helm install prometheus-operator prometheus-community/kube-prometheus-stack -f helm-values/kps-values.yml \
--n monitoring --version 55.0.0`
+```commandline
+helm install prometheus-operator prometheus-community/kube-prometheus-stack -f helm-values/kps-values.yml \
+-n monitoring --version 55.0.0
+```
 Multivalue configuration - use `helm multivalues`
 
 To access Prometheus UI, port-forward the service to localhost:
-`kubectl port-forward --namespace monitoring svc/prometheus-operator-kube-p-prometheus 9090:9090`
+```commandline
+kubectl port-forward --namespace monitoring svc/prometheus-operator-kube-p-prometheus 9090:9090
+```
 
 pull model vs push (PushGateway)
 
-## Prometheus TSDB
+## Prometheus 
+### Prometheus TSDB
 sample, time series, chunk, block, WAL
 
 Chunks exist within blocks.
@@ -46,19 +55,27 @@ New samples are first written to a chunk in the head block.
 When the head block fills up, a new block is created, and the old head block becomes persistent on disk.
 Chunks within a block remain immutable, while new blocks can be added or removed as needed.
 
-## An application that exposes metrics
-`kubectl apply -f apps/counter-app-deployment.yaml`
-`kubectl apply -f apps/counter-app-service.yaml`
+### An application that exposes metrics
+```commandline
+kubectl apply -f apps/counter-app-deployment.yaml
+kubectl apply -f apps/counter-app-service.yaml
+```
 Forward connections from a local port to a port on the pod
-`kubectl port-forward svc/counter-app 8080`
+```commandline
+kubectl port-forward svc/counter-app 8080
+```
 
 ### Scrape config
 Status -> Configuration
 [Scrape config example](https://fabianlee.org/2022/07/08/prometheus-monitoring-services-using-additional-scrape-config-for-prometheus-operator/)
-`kubectl get prometheus -n monitoring prometheus-operator-kube-p-prometheus -o yaml`
+```commandline
+kubectl get prometheus -n monitoring prometheus-operator-kube-p-prometheus -o yaml
+```
 
 ### Metrics format /metrics
-`http://localhost:8080/metrics`
+```commandline
+http://localhost:8080/metrics
+```
 ```text
 # HELP flask_exporter_info Multiprocess metric
 # TYPE flask_exporter_info gauge
@@ -74,11 +91,9 @@ demo_app_button_clicks_total 12.0
 
 #### Exporters
 An exporter is a piece of software that exposes metrics in a format that Prometheus can understand.
-[Flask Prometheus Exporter](https://pypi.org/project/prometheus-flask-exporter/)
-[Spring Boot Prometheus](https://medium.com/simform-engineering/revolutionize-monitoring-empowering-spring-boot-applications-with-prometheus-and-grafana-e99c5c7248cf)
-[Prometheus .NET](https://github.com/prometheus-net/prometheus-net)
-
-### TODO: how to setup exporter endpoint
+- [Flask Prometheus Exporter](https://pypi.org/project/prometheus-flask-exporter/)
+- [Spring Boot Prometheus](https://medium.com/simform-engineering/revolutionize-monitoring-empowering-spring-boot-applications-with-prometheus-and-grafana-e99c5c7248cf)
+- [Prometheus .NET](https://github.com/prometheus-net/prometheus-net)
 
 ### Service monitor
 The Prometheus Operator includes a Custom Resource Definition that allows the definition of the ServiceMonitor. 
@@ -92,6 +107,8 @@ the controller will action the ServiceMonitors we define and automatically build
 
 ### Explain helm-values/kps-values.yml
 The default KPS chart values can be found [here](https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml)
+How config values are processed:
+[prometheus.yaml](https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/templates/prometheus/prometheus.yaml)
 
 #### `serviceMonitorSelectorNilUsesHelmValues: false`
 Do not set default values for serviceMonitorSelector if empty or nil.
@@ -127,28 +144,41 @@ instant vector selectors, range vector selectors
 
 kube-state-metrics
 
-## Troubleshooting
+### Troubleshooting
 `curl 'http://localhost:9090/api/v1/series?match[]=demo_app_button_clicks_total' | jq`
-Check Status -> Targets
-check helm values (serviceMonitorSelectorNilUsesHelmValues)
-check service monitor configuration
+- Check Status -> Targets
+- check helm values (serviceMonitorSelectorNilUsesHelmValues)
+- check service monitor configuration
 
-grafana config
+## Grafana config
+Enable a sidecar in the KPS chart config to add dashboards to Grafana:
+```yaml
+grafana:
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+```
 `helm upgrade prometheus-operator prometheus-community/kube-prometheus-stack -f helm-values/kps-values.yml \
 -n monitoring --version 55.0.0`
 
-add an existing dashboard
+### Access Grafana
+`kubectl port-forward -n monitoring svc/prometheus-operator-grafana 3000:80`
 
-create a custom dashboard
+### How to find Grafana default password
+```commandline
+kubectl get secrets -A | grep grafana
+kubectl get secret --namespace monitoring prometheus-operator-grafana -o jsonpath="{.data.admin-user}" | base64 --decode
+kubectl get secret --namespace monitoring prometheus-operator-grafana -o jsonpath="{.data.admin-password}" | base64 --decode
+```
 
-demonstrate how to add a dashboard
-
-
-variable
+### create a custom dashboard
+add a dashboard via UI
+parameterize, variable
 
 ## Useful links:
 [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)
-[kube-prometheus-stack values](https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml)
+[kube-prometheus-stack default config](https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml)
 [PromQL basics](https://prometheus.io/docs/prometheus/latest/querying/basics/)
 Exporters:
 [Flask Prometheus Exporter](https://pypi.org/project/prometheus-flask-exporter/)
