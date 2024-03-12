@@ -72,6 +72,11 @@ Status -> Configuration
 kubectl get prometheus -n monitoring prometheus-operator-kube-p-prometheus -o yaml
 ```
 
+### Metrics example app
+```commandline
+https://github.com/ybaryshnikova/prometheus-metrics-example
+```
+
 ### Metrics format /metrics
 ```commandline
 http://localhost:8080/metrics
@@ -101,9 +106,6 @@ The ServiceMonitor is used to define an application you wish to scrape metrics f
 the controller will action the ServiceMonitors we define and automatically build the required Prometheus configuration.
 
 `kubectl apply -f apps/monitors/counter-app-service-monitor.yaml`
-
-### Pod monitor
-`kubectl apply -f apps/monitors/counter-app-pod-monitor.yaml`
 
 ### Explain helm-values/kps-values.yml
 The default KPS chart values can be found [here](https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml)
@@ -137,44 +139,19 @@ Do not set default values for ruleSelector if it is empty or nil.
 ```
 
 troubleshooting (check targets, port configuration, service/pod monitor)
+### Pod monitor
+`kubectl apply -f apps/monitors/counter-app-pod-monitor.yaml`
+
 
 ### promQL
 instant vector selectors, range vector selectors
 `sum(rate(demo_app_button_clicks_total[2m])) by (pod)`
-
-kube-state-metrics
 
 ### Troubleshooting
 `curl 'http://localhost:9090/api/v1/series?match[]=demo_app_button_clicks_total' | jq`
 - Check Status -> Targets
 - check helm values (serviceMonitorSelectorNilUsesHelmValues)
 - check service monitor configuration
-
-## Grafana config
-Enable a sidecar in the KPS chart config to add dashboards to Grafana:
-```yaml
-grafana:
-  sidecar:
-    dashboards:
-      enabled: true
-      label: grafana_dashboard
-```
-`helm upgrade prometheus-operator prometheus-community/kube-prometheus-stack -f helm-values/kps-values.yml \
--n monitoring --version 55.0.0`
-
-### Access Grafana
-`kubectl port-forward -n monitoring svc/prometheus-operator-grafana 3000:80`
-
-### How to find Grafana default password
-```commandline
-kubectl get secrets -A | grep grafana
-kubectl get secret --namespace monitoring prometheus-operator-grafana -o jsonpath="{.data.admin-user}" | base64 --decode
-kubectl get secret --namespace monitoring prometheus-operator-grafana -o jsonpath="{.data.admin-password}" | base64 --decode
-```
-
-### create a custom dashboard
-add a dashboard via UI
-parameterize, variable
 
 ## Useful links:
 [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)

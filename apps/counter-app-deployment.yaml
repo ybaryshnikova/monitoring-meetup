@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: counter-app
-          image: flipstone42/k8s-prometheus-custom-scaling:latest
+          image: yuliyab/flask-prom-metrics:latest
           resources:
             limits:
               memory: "128Mi"
